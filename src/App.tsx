@@ -2,10 +2,9 @@ import { MapContainer, TileLayer } from "react-leaflet";
 import "./App.css";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
-import mahalla from "./assets/maxalla.json";
-import mahalla2 from "./assets/maxalla_3.json";
 import mahalla4 from "./assets/maxalla_4.json";
 import L from "leaflet";
+import { LayersSidebar } from "@/components/layers-sidebar";
 
 function App() {
   const [map, setMap] = useState<any>(null);
@@ -38,7 +37,6 @@ function App() {
     popup.setContent(updatedContent);
   }
 
-  console.log(mahalla, map);
   useEffect(() => {
     if (map) {
       const bounds_group = L.featureGroup([]);
@@ -46,9 +44,7 @@ function App() {
       const layer = L.geoJson(mahalla4, {
         attribution: "",
         interactive: true,
-        // dataVar: "json_parcels_0",
         layerName: "layer",
-        // pane: "pane_parcels_0",
         onEachFeature: pop_parcels_0,
         // style: {
         //   pane: "pane_parcels_0",
@@ -71,6 +67,8 @@ function App() {
 
   return (
     <div style={{ width: "50vw", height: "50vh" }}>
+      <LayersSidebar />
+      <h1 className="text-3xl font-bold underline">Hello world!</h1>
       <MapContainer
         center={[39.7343782, 65.9952861]}
         style={{ width: "100%", height: "100%" }}
