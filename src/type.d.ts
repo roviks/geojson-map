@@ -1,7 +1,7 @@
 import { type GeoJsonObject } from "geojson";
 
 declare global {
-  type Layer = {
+  type ILayer = {
     layer: L.Layer;
     isVisible: boolean;
     title: string;
@@ -13,4 +13,4 @@ declare global {
   };
 }
 
-export { Layer, AddLayerDTO };
+export { ILayer as Layer, AddLayerDTO };

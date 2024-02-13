@@ -2,7 +2,7 @@ import { LayerBtn } from "./ui/layer-btn";
 import { DialogAddLayer } from "./ui/dialog-add-layer";
 
 type Props = {
-  layers: Layer[];
+  layers: ILayer[];
   onAddLayer: (data: AddLayerDTO) => void;
   onDeleteLayer: (id: number) => void;
   onToggleLayer: (id: number) => void;
@@ -14,8 +14,6 @@ export const MapLayers = ({
   onDeleteLayer,
   onToggleLayer,
 }: Props) => {
-  console.log(layers);
-
   return (
     <aside className="flex flex-col z-10 h-full w-64 border-r bg-white dark:bg-gray-800 text-black">
       <div className="flex items-center justify-between px-4 py-2 border-b">
@@ -31,6 +29,9 @@ export const MapLayers = ({
             isVisible={layer.isVisible}
             onDelete={onDeleteLayer}
             onToggle={onToggleLayer}
+            styles={
+              "style" in layer.layer.options ? layer.layer.options.style : {}
+            }
             title={layer.title.trim().length ? layer.title : "Unknown layer"}
           />
         ))}

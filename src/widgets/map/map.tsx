@@ -16,19 +16,52 @@ function removeEmptyRowsFromPopupContent(feature: Feature<Geometry, any>) {
   return tempDiv;
 }
 
-function renderPopups(feature: Feature<Geometry, any>, layer: L.Layer) {
-  layer.bindPopup(`<div></div>`, { maxHeight: 400 });
-  const popup = layer.getPopup();
-  if (!popup) return;
-  const content = popup.getContent();
-  if (!content) return;
+function resetHighlight(layer: L.GeoJSON) {
+  return (e: L.LeafletMouseEvent) => {
+    layer.resetStyle(e.target);
+  };
+}
 
-  const updatedContent = removeEmptyRowsFromPopupContent(feature);
-  popup.setContent(updatedContent);
+function zoomToFeature(map: L.Map) {
+  return (e: L.LeafletMouseEvent) => {
+    map.fitBounds(e.target.getBounds());
+  };
+}
+
+function highlightFeature(e: L.LeafletMouseEvent) {
+  const layer = e.target;
+
+  layer.setStyle({
+    weight: 5,
+    color: "#666",
+    dashArray: "",
+    fillOpacity: 0.7,
+  });
+
+  layer.bringToFront();
+}
+
+function onEachFeature(map: L.Map) {
+  return (feature: Feature<Geometry, any>, layer: L.GeoJSON) => {
+    layer.bindPopup(`<div></div>`, { maxHeight: 400 });
+
+    layer.on({
+      mouseover: highlightFeature,
+      mouseout: resetHighlight(layer),
+      click: zoomToFeature(map),
+    });
+    const popup = layer.getPopup();
+    if (!popup) return;
+    const content = popup.getContent();
+    if (!content) return;
+
+    const updatedContent = removeEmptyRowsFromPopupContent(feature);
+    popup.setContent(updatedContent);
+  };
 }
 
 export const MapView = () => {
-  const [layers, setLayers] = useState<Layer[]>([]);
+  const [layers, setLayers] = useState<ILayer[]>([]);
   const [map, setMap] = useState<Map | null>(null);
 
   const addLayer = (layer: L.Layer) => {
@@ -53,13 +86,16 @@ export const MapView = () => {
     const layer = L.geoJson(layerDTO.layer, {
       attribution: "",
       interactive: true,
-      onEachFeature: renderPopups,
+      onEachFeature: onEachFeature(map!),
       style: {
         fill: true,
         fillOpacity: 0.3,
         fillColor: "#FF0000",
-        color: "#FF0000",
+        color: "#000000",
         lineCap: "butt",
+        dashArray: "5",
+        dashOffset: "100",
+        stroke: true,
       },
     });
 
