@@ -16,48 +16,16 @@ function removeEmptyRowsFromPopupContent(feature: Feature<Geometry, any>) {
   return tempDiv;
 }
 
-function resetHighlight(layer: L.GeoJSON) {
-  return (e: L.LeafletMouseEvent) => {
-    layer.resetStyle(e.target);
-  };
-}
+function onEachFeature(feature: Feature<Geometry, any>, layer: L.Layer) {
+  layer.bindPopup(`<div></div>`, { maxHeight: 400 });
 
-function zoomToFeature(map: L.Map) {
-  return (e: L.LeafletMouseEvent) => {
-    map.fitBounds(e.target.getBounds());
-  };
-}
+  const popup = layer.getPopup();
+  if (!popup) return;
+  const content = popup.getContent();
+  if (!content) return;
 
-function highlightFeature(e: L.LeafletMouseEvent) {
-  const layer = e.target;
-
-  layer.setStyle({
-    weight: 5,
-    color: "#666",
-    dashArray: "",
-    fillOpacity: 0.7,
-  });
-
-  layer.bringToFront();
-}
-
-function onEachFeature(map: L.Map) {
-  return (feature: Feature<Geometry, any>, layer: L.GeoJSON) => {
-    layer.bindPopup(`<div></div>`, { maxHeight: 400 });
-
-    layer.on({
-      mouseover: highlightFeature,
-      mouseout: resetHighlight(layer),
-      click: zoomToFeature(map),
-    });
-    const popup = layer.getPopup();
-    if (!popup) return;
-    const content = popup.getContent();
-    if (!content) return;
-
-    const updatedContent = removeEmptyRowsFromPopupContent(feature);
-    popup.setContent(updatedContent);
-  };
+  const updatedContent = removeEmptyRowsFromPopupContent(feature);
+  popup.setContent(updatedContent);
 }
 
 export const MapView = () => {
@@ -83,10 +51,49 @@ export const MapView = () => {
   };
 
   const handleOnAddGeoJsonLayer = (layerDTO: AddLayerDTO) => {
-    const layer = L.geoJson(layerDTO.layer, {
+    const geoJsonLayer = L.geoJson(layerDTO.layer, {
       attribution: "",
       interactive: true,
-      onEachFeature: onEachFeature(map!),
+      onEachFeature: (feature, layer) => {
+        onEachFeature(feature, layer);
+        layer.on({
+          popupopen: (e) => {
+            const layer = e.target;
+
+            layer.setStyle({
+              weight: 2,
+              dashArray: "",
+              fillOpacity: 0.7,
+            });
+
+            layer.bringToFront();
+          },
+          popupclose: (e) => {
+            geoJsonLayer.resetStyle(e.target);
+          },
+          mouseover: (e) => {
+            const layer = e.target;
+
+            layer.setStyle({
+              weight: 2,
+              dashArray: "",
+              fillOpacity: 0.7,
+            });
+
+            layer.bringToFront();
+          },
+          mouseout: (e) => {
+            if (layer.isPopupOpen()) {
+              return;
+            }
+            geoJsonLayer.resetStyle(e.target);
+          },
+          click: (e) => {
+            map?.fitBounds(e.target.getBounds());
+          },
+        });
+        return;
+      },
       style: {
         fill: true,
         fillOpacity: 0.3,
@@ -99,10 +106,10 @@ export const MapView = () => {
       },
     });
 
-    addGeoJSONLayer(layer);
+    addGeoJSONLayer(geoJsonLayer);
     setLayers((prev) => [
       ...prev,
-      { layer, isVisible: true, title: layerDTO.title },
+      { layer: geoJsonLayer, isVisible: true, title: layerDTO.title },
     ]);
   };
 
